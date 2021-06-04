@@ -43,7 +43,10 @@ def main(args):
     train_set = MXFaceDataset(root_dir=cfg.rec, local_rank=local_rank)
     train_sampler = torch.utils.data.distributed.DistributedSampler(
         train_set, shuffle=True)
-    train_loader = MXFaceDataset()
+    train_loader = DataLoaderX(
+        local_rank=local_rank, dataset=train_set, batch_size=cfg.batch_size,
+        sampler=train_sampler, num_workers=2, pin_memory=True, drop_last=True)
+
 
     dropout = 0.4 if cfg.dataset == "webface" else 0
     backbone = get_model(args.network, dropout=dropout, fp16=cfg.fp16).to(local_rank)
