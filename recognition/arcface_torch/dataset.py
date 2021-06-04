@@ -9,6 +9,55 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
+import sys 
+import re 
+
+
+DEFAULT_ENCODING = 'utf-8'
+def ustr(x):
+    '''py2/py3 unicode helper'''
+
+    if sys.version_info < (3, 0, 0):
+        from PyQt4.QtCore import QString
+        if type(x) == str:
+            return x.decode(DEFAULT_ENCODING)
+        if type(x) == QString:
+            #https://blog.csdn.net/friendan/article/details/51088476
+            #https://blog.csdn.net/xxm524/article/details/74937308
+            return unicode(x.toUtf8(), DEFAULT_ENCODING, 'ignore')
+        return x
+    else:
+        return x
+
+def natural_sort(list, key=lambda s: s):
+  """
+  Sort the list into natural alphanumeric order.
+  """
+
+  def get_alphanum_key_func(key):
+    convert = lambda text: int(text) if text.isdigit() else text
+    return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
+
+  sort_key = get_alphanum_key_func(key)
+  list.sort(key=sort_key)
+
+
+def scanAllImages(folderPath):
+  extensions = ['.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+  images = []
+
+  for root, dirs, files in os.walk(folderPath):
+    for file in files:
+      if file.lower().endswith(tuple(extensions)):
+        relativePath = os.path.join(root, file)
+        path = ustr(os.path.abspath(relativePath))
+        images.append(path)
+  natural_sort(images, key=lambda x: x.lower())
+  return images
 
 class BackgroundGenerator(threading.Thread):
     def __init__(self, generator, local_rank, max_prefetch=6):
@@ -81,27 +130,16 @@ class MXFaceDataset(Dataset):
         self.local_rank = local_rank
         path_imgrec = os.path.join(root_dir, 'train.rec')
         path_imgidx = os.path.join(root_dir, 'train.idx')
-        self.imgrec = mx.recordio.MXIndexedRecordIO(path_imgidx, path_imgrec, 'r')
-        s = self.imgrec.read_idx(0)
-        header, _ = mx.recordio.unpack(s)
-        if header.flag > 0:
-            self.header0 = (int(header.label[0]), int(header.label[1]))
-            self.imgidx = np.array(range(1, int(header.label[0])))
-        else:
-            self.imgidx = np.array(list(self.imgrec.keys))
+        
+        self.images_path = np.random.shuffle(scanAllImages(IMG_DIR))
+
 
     def __getitem__(self, index):
-        idx = self.imgidx[index]
-        s = self.imgrec.read_idx(idx)
-        header, img = mx.recordio.unpack(s)
-        label = header.label
-        if not isinstance(label, numbers.Number):
-            label = label[0]
-        label = torch.tensor(label, dtype=torch.long)
-        sample = mx.image.imdecode(img).asnumpy()
-        if self.transform is not None:
-            sample = self.transform(sample)
-        return sample, label
+      path = self.images_path[index]
+      img = cv.imread(path)
+      label = int(os.path.basename(os.path.dirname(path)))
+
+      return img, label
 
     def __len__(self):
-        return len(self.imgidx)
+        return len(self.images_path)
