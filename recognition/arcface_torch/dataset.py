@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import *
 
 import sys 
 import re 
-
+import cv2
 
 DEFAULT_ENCODING = 'utf-8'
 def ustr(x):
@@ -118,7 +118,7 @@ class DataLoaderX(DataLoader):
 
 
 class MXFaceDataset(Dataset):
-    def __init__(self, root_dir, local_rank):
+    def __init__(self, root_dir='', local_rank=''):
         super(MXFaceDataset, self).__init__()
         self.transform = transforms.Compose(
             [transforms.ToPILImage(),
@@ -130,16 +130,16 @@ class MXFaceDataset(Dataset):
         self.local_rank = local_rank
         path_imgrec = os.path.join(root_dir, 'train.rec')
         path_imgidx = os.path.join(root_dir, 'train.idx')
-        
-        self.images_path = np.random.shuffle(scanAllImages(IMG_DIR))
-
+        IMG_DIR = 'casia_align_112'
+        self.images_path = scanAllImages(IMG_DIR)
 
     def __getitem__(self, index):
       path = self.images_path[index]
-      img = cv.imread(path)
+      sample = mx.image.imread(path).asnumpy()
       label = int(os.path.basename(os.path.dirname(path)))
-
-      return img, label
+      if self.transform is not None:
+          sample = self.transform(sample)
+      return sample, label
 
     def __len__(self):
         return len(self.images_path)
