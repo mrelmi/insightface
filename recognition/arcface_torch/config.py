@@ -1,14 +1,14 @@
 from easydict import EasyDict as edict
 
 config = edict()
-config.dataset = "ms1m-retinaface-t1"
+config.dataset = "webface"
 config.embedding_size = 512
 config.sample_rate = 1
 config.fp16 = False
 config.momentum = 0.9
 config.weight_decay = 5e-4
-config.batch_size = 64
-config.lr = 0.1  # batch size is 512
+config.batch_size = 128
+config.lr = 0.05  # batch size is 512
 config.output = "ms1mv3_arcface_r50"
 
 if config.dataset == "emore":

@@ -20,6 +20,8 @@ from utils.utils_logging import AverageMeter, init_logging
 
 
 def main(args):
+    torch.autograd.set_detect_anomaly(True)
+
     try:
         world_size = int(os.environ['WORLD_SIZE'])
         rank = int(os.environ['RANK'])
