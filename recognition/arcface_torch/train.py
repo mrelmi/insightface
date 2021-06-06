@@ -56,7 +56,7 @@ def main(args):
 
     if args.resume:
         try:
-            backbone_pth = os.path.join(cfg.output, "backbone.pth")
+            backbone_pth = '/content/drive/MyDrive/torch arcface model/backbone.pth'
             backbone.load_state_dict(torch.load(backbone_pth, map_location=torch.device(local_rank)))
             if rank is 0:
                 logging.info("backbone resume successfully!")

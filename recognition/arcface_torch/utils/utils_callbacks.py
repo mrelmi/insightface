@@ -102,8 +102,10 @@ class CallBackModelCheckpoint(object):
 
     def __call__(self, global_step, backbone, partial_fc, backbone_onnx):
         if global_step > 100 and self.rank is 0:
-            path_module = os.path.join(self.output, "backbone.pth")
-            path_onnx = os.path.join(self.output, "backbone.onnx")
+            # path_module = os.path.join(self.output, "backbone.pth")
+            # path_onnx = os.path.join(self.output, "backbone.onnx")
+            path_module = '/content/drive/MyDrive/torch arcface model/backbone.pth'
+            path_onnx = '/content/drive/MyDrive/torch arcface model/bachbone.onnx'
             torch.save(backbone.module.state_dict(), path_module)
             logging.info("Pytorch Model Saved in '{}'".format(path_module))
             convert_onnx(backbone_onnx, path_module, path_onnx)
